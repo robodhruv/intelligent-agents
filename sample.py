@@ -10,13 +10,12 @@ def determine_turn(turn, observation_n, j, total_sum, prev_total_sum, reward_n):
 	#if we go 15+ iterations and get a reward each step, we're doing something right
 	#thats when we turn
 	if(j >= 15):
-		if(total_sum/ j ) == 0:
+		if(total_sum/ j ) < 0:
 			turn = True
 		else:
 			turn = False
 
 		#reset vars
-		#total_sum = 0
 		j = 0
 		prev_total_sum = total_sum
 		total_sum = 0
