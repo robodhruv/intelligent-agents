@@ -131,7 +131,6 @@ void updateBoard(vector<char> &board, bool player , int pos){
 }
 
 int maxMove(vector<char> &board){
-	//printChar(board);
 	vector<int> possible_moves(0);
 	for(int i = 0 ; i < 9 ; i++){
 		if(board[i] == '*') possible_moves.push_back(i);
@@ -139,8 +138,6 @@ int maxMove(vector<char> &board){
 	if(possible_moves.size() == 1){
 		return possible_moves[0];
 	}
-	//cout << "Here" ;
-	//printInt(possible_moves);
 	vector<float> reward(0);
 	for(int j = 0 ; j < possible_moves.size() ; j++){
 		vector<char> temp = board;
@@ -161,77 +158,42 @@ int maxMove(vector<char> &board){
 
 void PlayGame(vector<char> &board){
 	int fate = rand() % 100;
-	//cout << fate << endl;
 	if (fate < 50){
-		//cout << "Exploitation" << endl;
 		int bestMove = maxMove(board);
-		//cout << "The Best Move was : " << bestMove << endl;
 		vector<char> temp = board;
 		updateBoard(temp, 1, bestMove);
-		//cout << "The new board was : "; printChar(temp); cout << endl;
 		if (gameover(temp)) {
-			//cout << "Player 1 Won" << endl;
-			//cout << "The initial Q-Function for : ";
-			//printChar(board);
 			map<vector<char>, float>::iterator i1 = qTable.find(board);
 			map<vector<char>, float>::iterator i2 = qTable.find(temp);
 			float qBoard = i1->second, qTemp = i2->second;
-			//cout << "was " << qBoard << endl;
-			//cout << "q Temp was " << qTemp << endl;
 			i1->second = qBoard + alpha*(qTemp - qBoard);
-			//cout << qBoard + alpha*(qTemp - qBoard);
-			//map<vector<char>, float>::iterator i3 = qTable.find(board);
-			//cout << "Now it is " << i3->second << endl;
 			return;
 		}
 		int randMove = randomMove(temp);
-		//cout << "Random Move for opponent was : " << randMove <<endl;
 		updateBoard(temp, 0 , randMove);
-		//cout << "The new board was : "; printChar(temp); cout << endl;
 
 		if(gameover(temp)){
-			//cout << "Player 2 Won" << endl;
-			//cout << "The initial Q-Function for : ";
-			//printChar(board);
 			map<vector<char>, float>::iterator i1 = qTable.find(board);
 			map<vector<char>, float>::iterator i2 = qTable.find(temp);
 			float qBoard = i1->second, qTemp = i2->second;
-			//cout << "was " << qBoard << endl;
-			//cout << "q Temp was " << qTemp << endl;
 			i1->second = qBoard + alpha*(qTemp - qBoard);
-			//map<vector<char>, float>::iterator i3 = qTable.find(board);
-			//cout << "Now it is " << i3->second << endl;			return;
 		}
-			//cout << "The initial Q-Function for : ";
-			//printChar(board);
 		 	map<vector<char>, float>::iterator i1 = qTable.find(board);
 			map<vector<char>, float>::iterator i2 = qTable.find(temp);
 			float qBoard = i1->second, qTemp = i2->second;
-			//cout << "was " << qBoard << endl;
-			//cout << "q Temp was " << qTemp << endl;
 			i1->second = qBoard + alpha*(qTemp - qBoard);
-			//cout << qBoard + alpha*(qTemp - qBoard);
-			//map<vector<char>, float>::iterator i3 = qTable.find(board);
-			//cout << "Now it is " << i3->second << endl;
 		PlayGame(temp);
 	}
 	else {
-		//cout << "Exploration" << endl;
 		int randMove = randomMove(board);
-		//cout << "Random Move taken : " << randMove <<endl;
 		vector<char> temp = board;
 		updateBoard(temp, 1, randMove);
-		//cout << "The new board was : "; printChar(temp); cout << endl;
 		if (gameover(temp)) {
-			//cout << "Player 1 Won" << endl;
 			return;
 		}
 		randMove = randomMove(temp);
-		//cout << "Random Move for opponent was : " << randMove <<endl;
 		updateBoard(temp, 0 , randMove);
-		//cout << "The new board was : "; printChar(temp); cout << endl;
 		if(gameover(temp)){
-			//cout << "Player 2 Won" << endl;
 			return;
 			
 		}
