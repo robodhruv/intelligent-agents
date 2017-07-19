@@ -107,4 +107,3 @@ if __name__ == '__main__':
 	main()
 	display(qTable)
 	print "Exploitation : %r , Exploration : %r " %(count_exploitation,count_exploration)
-
