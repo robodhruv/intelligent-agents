@@ -6,27 +6,28 @@ import matplotlib.pyplot as plt
 
 env = gym.make('MountainCar-v0')
 
-gamma = 0.99
+gamma = 0.95
+
+# Given array of rewards, it computes the discouted reward.
+# R = r1 + y*r2 + y^2*r3 + ...
 
 def discount_rewards(r):
-    """ take 1D float array of rewards and compute discounted reward """
-    discounted_r = np.zeros_like(r)
-    running_add = 0
-    for t in reversed(xrange(0, r.size)):
-        running_add = running_add * gamma + r[t]
-        discounted_r[t] = running_add
-    return discounted_r
+    final_reward = np.zeros_like(r)
+    current_sum = 0
+    for j in reversed(xrange(0, len(r))):
+        current_sum = current_sum * gamma + r[j]
+        final_reward[j] = current_sum
+    return final_reward
 
 class agent():
     def __init__(self, lr, s_size,a_size,h_size):
-        #These lines established the feed-forward part of the network. The agent takes a state and produces an action.
         self.state_in= tf.placeholder(shape=[None,s_size],dtype=tf.float32)
-        hidden = slim.fully_connected(self.state_in,h_size,biases_initializer=None,activation_fn=tf.nn.relu)
-        self.output = slim.fully_connected(hidden,a_size,activation_fn=tf.nn.softmax,biases_initializer=None)
+        hidden1 = slim.fully_connected(self.state_in,h_size,biases_initializer=None,activation_fn=tf.nn.relu)
+        hidden2 = slim.fully_connected(hidden1,h_size,biases_initializer=None,activation_fn=tf.nn.relu)
+        self.output = slim.fully_connected(hidden2,a_size,activation_fn=tf.nn.softmax,biases_initializer=None)
         self.chosen_action = tf.argmax(self.output,1)
 
-        #The next six lines establish the training proceedure. We feed the reward and chosen action into the network
-        #to compute the loss, and use it to update the network.
+
         self.reward_holder = tf.placeholder(shape=[None],dtype=tf.float32)
         self.action_holder = tf.placeholder(shape=[None],dtype=tf.int32)
         
@@ -50,7 +51,8 @@ tf.reset_default_graph() #Clear the Tensorflow graph.
 
 myAgent = agent(lr=1e-2,s_size=2,a_size=2,h_size=8) #Load the agent.
 
-total_episodes = 2000 #Set total number of episodes to train agent on.
+sample_training = 20
+self_training = 3000
 max_ep = 200
 update_frequency = 5
 
@@ -67,7 +69,39 @@ with tf.Session() as sess:
     for ix,grad in enumerate(gradBuffer):
         gradBuffer[ix] = grad * 0
         
-    while i < total_episodes:
+    while i < sample_training:
+        s = env.reset()
+        running_reward = 0
+        ep_history = []
+        for j in range(max_ep):
+            a = 2 if s[0] < -0.9 or s[1] > 0 or (abs(s[1]) < 0.001 and s[0] < -0.5) else 0
+            s1,r,d,_ = env.step(a) 
+            if( a== 2):
+                a = 1
+            ep_history.append([s,a,r,s1])
+            s = s1
+            running_reward += r
+            if d == True:
+                ep_history = np.array(ep_history)
+                ep_history[:,2] = discount_rewards(ep_history[:,2])
+                feed_dict={myAgent.reward_holder:ep_history[:,2],
+                        myAgent.action_holder:ep_history[:,1], myAgent.state_in:np.vstack(ep_history[:,0])}
+                grads = sess.run(myAgent.gradients, feed_dict=feed_dict)
+                for idx,grad in enumerate(grads):
+                    gradBuffer[idx] += grad
+
+                if i % update_frequency == 0 and i != 0:
+                    feed_dict= dictionary = dict(zip(myAgent.gradient_holders, gradBuffer))
+                    _ = sess.run(myAgent.update_batch, feed_dict=feed_dict)
+                    for ix,grad in enumerate(gradBuffer):
+                        gradBuffer[ix] = grad * 0
+                
+                total_reward.append(running_reward)
+                total_lenght.append(j)
+                break
+        i += 1
+    i = 0            
+    while i < self_training:
         s = env.reset()
         running_reward = 0
         ep_history = []
@@ -80,14 +114,10 @@ with tf.Session() as sess:
                 action = 2
             else:
                 action = 0
-            s1,r,d,_ = env.step(action) #Get our reward for taking an action given a bandit
-            #env.render()
-            delta = abs(s1[1])
+            s1,r,d,_ = env.step(action)
             ep_history.append([s,a,r,s1])
             s = s1
-            running_reward += r + delta*0.5
-            if (i % 100 == 0):
-                env.render()
+            running_reward += r
             if d == True:
                 #Update the network.
                 ep_history = np.array(ep_history)
@@ -110,5 +140,5 @@ with tf.Session() as sess:
 
             #Update our running tally of scores.
         if (i+1) % 100 == 0:
-            print "Training Percent : %r , Mean Reward : %r"%((i+1)/20, np.mean(total_reward[-100:]))
+            print "Training Percent : %r , Mean Reward : %r"%((i+1)/30, np.mean(total_reward[-100:]))
         i += 1

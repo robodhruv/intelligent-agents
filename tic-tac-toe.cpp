@@ -49,11 +49,26 @@ void printInt(vector<int> a){
 	}
 	return;
 }
+void printBoard(vector<char> &c){
+	cout << "\n\n\tTic Tac Toe\n\n";
+
+	cout << "Player 1 (X)  -  Player 2 (O)" << endl << endl;
+	cout << endl;
+	cout << "     |     |     " << endl;
+	cout << "  " << c[0] << "  |  " << c[1] << "  |  " << c[2] << endl;
+	cout << "_____|_____|_____" << endl;
+	cout << "     |     |     " << endl;
+	cout << "  " << c[3] << "  |  " << c[4] << "  |  " << c[5] << endl;
+	cout << "_____|_____|_____" << endl;
+	cout << "     |     |     " << endl;
+	cout << "  " << c[6] << "  |  " << c[7] << "  |  " << c[8] << endl;
+	cout << "     |     |     " << endl << endl;
+}
 
 void printMap(map<vector<char>, float> &a){
 	for(map<vector<char>,float>::iterator i1 = a.begin() ; i1 != a.end() ; i1++){
 		cout << "Board : ";
-		printChar(i1->first);
+		printBoard(i1->first);
 		cout << "\t" << "Reward : " << i1->second;
 		cout << endl;
 	}
@@ -225,22 +240,6 @@ void PlayGame(vector<char> &board){
 	}
 }
 
-void printBoard(vector<char> &c){
-	system("cls");
-	cout << "\n\n\tTic Tac Toe\n\n";
-
-	cout << "Player 1 (X)  -  Player 2 (O)" << endl << endl;
-	cout << endl;
-	cout << "     |     |     " << endl;
-	cout << "  " << c[0] << "  |  " << c[1] << "  |  " << c[2] << endl;
-	cout << "_____|_____|_____" << endl;
-	cout << "     |     |     " << endl;
-	cout << "  " << c[3] << "  |  " << c[4] << "  |  " << c[5] << endl;
-	cout << "_____|_____|_____" << endl;
-	cout << "     |     |     " << endl;
-	cout << "  " << c[6] << "  |  " << c[7] << "  |  " << c[8] << endl;
-	cout << "     |     |     " << endl << endl;
-}
 
 int main(){
 	ofstream outfile("Q-Table Tic-Tac-Toe.txt");
@@ -258,8 +257,8 @@ int main(){
 	cout << "The number of draws : " << cdraw << endl;
 	cout << "The number of loss : " << closs << endl;
 
-	for(int i = 0 ; i< 100*episodes ; i++){
-		if(i%100000 == 0) cout << i/10000 << "%" << endl;
+	for(int i = 0 ; i< episodes ; i++){
+		if(i%1000 == 0) cout << i/100 << "%" << endl;
 		PlayGame(initialBoard);
 	}
 	printMap(qTable);
